@@ -257,7 +257,8 @@ def sql_savecomb2(combinaciones=None):
                     e1 = asdict(v).get('e1')  # e1 en el caso de euromillones
                     e2 = asdict(v).get('e2')  # e2 en el caso de euromillones
                     combinacion += [e1, e2]
-                print(f'Combinación {combinacion[0]}: {combinacion[1:]}')
+                print(*combinacion[1:])
+                # print(f'Combinación {combinacion[0]}: {combinacion[1:]}')
                 # print(f'sql_savecomb2: Combinaciones {grp}')
 
                 campos = sql_getcolumnname(con, tabla)

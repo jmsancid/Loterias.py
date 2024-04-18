@@ -11,6 +11,7 @@ from sqlite3 import Error
 from typing import List, Union
 from bisect import bisect_left, bisect_right
 
+cur_year = str(datetime.now().year)  # Año actual para descargar las combinaciones de primitiva
 class lotoparams:
     PRIMIFIELDS = ('idx', 'fecha', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'compl', 're')
     EUROFIELDS = ('idx', 'fecha', 'n1', 'n2', 'n3', 'n4', 'n5', 'e1', 'e2')
@@ -34,7 +35,8 @@ class lotoparams:
     dbfile = r'loterias.db'
     dbdir = r'/home/chema/PycharmProjects/loterias/'
     EUROWEB = 'https://www.euromillones.com.es/resultados-anteriores.html'
-    PRIMIWEB = 'https://www.loterias.com/la-primitiva/resultados/2022'
+    #PRIMIWEB = 'https://www.loterias.com/la-primitiva/resultados/2023'
+    PRIMIWEB = 'https://www.loterias.com/la-primitiva/resultados/' + cur_year
     PRIMIDAYS = (46, 1, 4, 6)  # Dias de primitiva. Domingo es día 0. Primitiva es lunes, jueves y sábado: 1, 4 y 6. El 46
     # representa el total de sorteos de primitiva de jueves y sábado
     EURODAYS = (25, 2, 5)  # Dias de euromillones. Domingo es día 0. Euromilones es martes y viernes: 2 y 5. El 25
