@@ -8,14 +8,14 @@ import re
 
 
 def procesa_fecha(fecha):
-    meses = {'ene': '01', 'feb': '02', 'mar': '03', 'abr': '04', 'mayo': '05', 'jun': '06',
+    meses = {'ene': '01', 'feb': '02', 'mar': '03', 'abr': '04', 'may': '05', 'jun': '06',
              'jul': '07', 'ago': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dic': '12'}
 
     fecha = fecha.text.strip().split(' ')
     # print('procesa fecha', fecha)
     dia = re.sub("[^0-9]", "", fecha[0])
     dia = dia if int(dia) > 9 else '0' + dia
-    mes = meses[fecha[1]]
+    mes = meses[fecha[1].strip('.')]
     anno = fecha[2]
     fecha_corta = anno + '-' + mes + '-' + dia
     return fecha_corta
