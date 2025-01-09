@@ -6,8 +6,8 @@ from dataclasses import asdict
 
 import constants as cte
 from clases import PrimiComb
-from get_primi_comb_from_web import get_primi_latest_results
-from get_euro_comb_from_web import get_euro_latest_results
+from getPrimiCombFromWeb import get_primi_latest_results
+from getEuroCombFromWeb import get_euro_latest_results
 from db_mgnt import sql_connection, sql_find, sql_recordcount, sql_insert, sql_getcolumnname, sql_checkifexists, \
     Error
 
@@ -64,13 +64,16 @@ def sql_savecomb(combinaciones=None):
     tabla = cte.SELPRIMI if primitiva else cte.SELEURO
 
     # Obtengo el número de la semana actual
-    def getcurrentweek(anno: int = int(datetime.now().year),
-                       mes: int = int(datetime.now().month),
-                       dia: int = int(datetime.now().day)):
-        currentweek = "%2.2d" % datetime(anno, mes, dia).isocalendar().week
-        return currentweek
+    currentweek   = datetime.now().isocalendar().week  # obtengo el número de la semana actual
 
-    currentweek = getcurrentweek()
+    # def getcurrentweek(anno: int = int(datetime.now().year),
+    #                    mes: int = int(datetime.now().month),
+    #                    dia: int = int(datetime.now().day)):
+    #     currentweek = "%2.2d" % datetime(anno, mes, dia).isocalendar().week
+    #     return currentweek
+    # currentweek = getcurrentweek()
+
+
 
     # Busco fechas de la semana siguiente a la actual, correspondientes a martes, jueves, viernes y sábado
     # dependiendo del valor de x

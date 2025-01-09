@@ -21,7 +21,8 @@ PREMIADOSEURO = 'PremiadosEuro'  # Nombre de la db con todas las apuestas de Eur
 DBDIR = r'/home/chema/PycharmProjects/loterias/'
 DBFILE = r'loterias.db'
 EUROWEB = 'https://www.euromillones.com.es/resultados-anteriores.html'
-PRIMIWEB = 'https://www.loterias.com/la-primitiva/resultados/' + cur_year
+# PRIMIWEB = 'https://www.loterias.com/la-primitiva/resultados/' + cur_year
+PRIMIWEB = 'https://www.loteriasyapuestas.es/es/resultados/primitiva'
 PRIMIDAYS = (46, 1, 4, 6)  # Dias de primitiva. Domingo es día 0. Primitiva es lunes, jueves y sábado: 1, 4 y 6. El 46
 # representa el total de sorteos de primitiva de jueves y sábado
 EURODAYS = (25, 2, 5)  # Dias de euromillones. Domingo es día 0. Euromilones es martes y viernes: 2 y 5. El 25
@@ -31,5 +32,20 @@ EURONUMBERS = 5  # Cantidad de numeros que forman una apuesta de euromillones, s
 PRIMI_Q_BETS = 5  # Nº de apuestas de primitiva
 EURO_Q_BETS = 5  # Nº de apuestas de euromillones
 Q_NUM_MAS_FREQ = 10  # Cantidad de números seleccionados en la lista de más frecuentes
-EVEN = 'e'
-ODD = 'o'
+EVEN    = 'e'
+ODD     = 'o'
+LUNES       = 1
+MARTES      = 2
+MIERCOLES   = 3
+JUEVES      = 4
+VIERNES     = 5
+SABADO      = 6
+DOMINGO     = 7
+PRIMAVERA   = 1
+VERANO      = 2
+OTONO       = 3
+INVIERNO    = 4
+ESTACIONES  = {1: 'PRIMAVERA',
+               2: 'VERANO',
+               3: 'OTOÑO',
+               4: 'INVIERNO'}

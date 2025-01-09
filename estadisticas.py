@@ -1,6 +1,9 @@
 #!usr/bin/env
 # -*- coding: cp1252 -*-
+
+from myFunctions import getEstacion
 import copy
+from dataclasses import dataclass, fields
 import sys
 import random
 import calendar
@@ -9,8 +12,10 @@ from datetime import datetime
 from functools import wraps
 from bisect import bisect_left
 import constants as cte
-from clases import PrimiDB, EuroDB
+from clases import PrimiDB, EuroDB, PrimiComb, EuroComb
 from db_mgnt import sql_connection, sql_getcolumnname, Error
+from typing import List, Union, Dict
+
 
 
 def measure(func):
@@ -51,7 +56,7 @@ def imprimecombinacion(func, *args):
             print(f'\tReintegro: {reintegro}')
 
 
-def randomiza(combinaciones: dict, q_randomizaciones: int=5):
+def randomiza(combinaciones: dict, q_randomizaciones: int=16):
     """
     Toma un conjunto de combinaciones y genera otro conjunto igual mezclando al azar los elementos de las
     combinaciones
@@ -87,8 +92,10 @@ def randomiza(combinaciones: dict, q_randomizaciones: int=5):
     return randomized_comb
 
 
-def analiza(lototype):
+def oldAnaliza(lototype):
     """
+    OBSOLETA
+
     rutina para seleccionar 5 combinaciones de primitiva y 2 de euromillones.
     :param lototype: tipo de lotería PRIMITIVA o EUROMILLONES
     :return: diccionario con la fecha, el número de orden de la apuesta (del 0 al 4 en primitiva y
@@ -115,8 +122,8 @@ def analiza(lototype):
     random.seed(None, 2)
     q_randomizaciones = random.randint(1, num_days)
 
-    # qselcombtotsorteos = Sorteo.selcombs()
-    qselcombtotsorteos = randomiza(Sorteo.selcombs(), q_randomizaciones)
+    qselcombtotsorteos = Sorteo.selcombs()
+    # qselcombtotsorteos = randomiza(Sorteo.selcombs(), q_randomizaciones)
 
     # sorteodia1 = PrimiDB().contador(dias[0])
     # freqevoldia1 = Sorteo.freq_evolution(dias[0])
@@ -143,6 +150,48 @@ def analiza(lototype):
     else:
         return qselcombtotsorteos, qselcombdia1, qselcombdia2
 
+
+def analiza(combinaciones: Union[List[PrimiComb], List[EuroComb]], criterio:int=0) -> Dict:
+    """
+    20250601    SUSTITUYE A olsAnaliza
+    
+    Devuelve la frecuencia con la que salen los números según un determinado criterio.
+    Se devuelve un diccionario con el año como clave (año 0 es para todas las combinaciones) y como valor la distribución de
+    numeros más frecuentes según la estación del año
+    :param combinaciones: lista de objetos PrimiComb o EuroComb de todos los sorteos realizados
+    :param criterio: valor entero entre 0 y 4
+    0 devuelve la frecuencia con la que salen los números considerando todos los sorteos realizados
+    1-4 devuelve la frecuencia con la que salen los números en cada estación, primavera, verano, otoño, invierno
+    :return: diccionario con la fecha, el número de orden de la apuesta (del 0 al 4 en primitiva y
+    del 0 al 1 en euromillones) y la apuesta correspondiente, sin complementario en el caso de la primitiva.
+    """
+    currentWeekNumber   = datetime.now().isocalendar().week  # obtengo el número de la semana actual
+    campos = [campo for campo in combinaciones[0].__dict__.keys() if not campo in ('comp', 'combDate')] # tomo todos
+    # los campos, excepto la fecha y el complementario
+    results = {}
+    for campo in campos:
+        match criterio:
+            case 1: # frecuencia de números en primavera
+                contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
+                                if getEstacion(combinacion.combDate) == cte.PRIMAVERA]
+            case 2: # frecuencia de números en verano
+                contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
+                                if getEstacion(combinacion.combDate) == cte.VERANO]
+            case 3: # frecuencia de números en otoño
+                contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
+                                if getEstacion(combinacion.combDate)==cte.OTONO]
+            case 4: # frecuencia de números en invierno
+                contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
+                                if getEstacion(combinacion.combDate) == cte.INVIERNO]
+            case 5: # frecuencia de números en función del número de semana anual
+                contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
+                                if combinacion.combDate.isocalendar().week == currentWeekNumber]
+            case _:
+                contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones]
+
+        results[campo] = Counter(contajeCampo).most_common()
+
+    return results
 
 def siblinged(comb: list[tuple[int]], qcomb: int = 10) -> dict[int:list]:
     """

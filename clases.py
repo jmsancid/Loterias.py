@@ -17,16 +17,18 @@ Posteriormente, tras seleccionar los 36 números, se mezclarán aleatoriamente.
 Se deja de tener en cuenta la evolución de la frecuencia (freqevolution)
 '''
 
-@dataclass()
+# @dataclass()
+@dataclass
 class PrimiComb:
-    n1: int
-    n2: int
-    n3: int
-    n4: int
-    n5: int
-    n6: int
-    comp: int = field(repr=False)
-    re: Union[int, None]
+    combDate    : None      = field(init=False)
+    n1          : int       = field(init=False)
+    n2          : int       = field(init=False)
+    n3          : int       = field(init=False)
+    n4          : int       = field(init=False)
+    n5          : int       = field(init=False)
+    n6          : int       = field(init=False)
+    comp        : int       = field(init=False, repr=False)
+    re          : Union[int, None]       = field(init=False)
 
 
 def make_primitiva_dbclass():
@@ -34,14 +36,43 @@ def make_primitiva_dbclass():
     :returns objeto PrimiDB todas las combinaciones de primitiva
     """
 
-    db_fields = ', '.join(cte.PRIMIFIELDS[2:])
+    # db_fields = ', '.join(cte.PRIMIFIELDS[2:])    # sólo números
+    db_fields = ', '.join(cte.PRIMIFIELDS[1:])      # números y fecha de la combinación
     sqlstmt = f'SELECT {db_fields} FROM {cte.PRIMITIVA}'
 
     con = sql_connection(cte.DBDIR + cte.DBFILE)
     cursor = con.cursor()
     cursor.execute(sqlstmt)
+
     combinations = list(cursor.fetchall())
-    return [PrimiComb(*cmb) for cmb in combinations]
+    primiCombs = []
+    strfmt  = "%Y-%m-%d"
+    for comb in combinations:
+        # auxComb = PrimiComb(
+        #     combDate    = datetime.datetime.strptime(comb[0], strfmt),
+        #     n1          = comb[1],
+        #     n2          = comb[2],
+        #     n3          = comb[3],
+        #     n4          = comb[4],
+        #     n5          = comb[5],
+        #     n6          = comb[6],
+        #     comp        = comb[7],
+        #     re          = comb[8]
+        #     )
+        auxComb = PrimiComb()
+        auxComb.combDate    = datetime.datetime.strptime(comb[0], strfmt)
+        auxComb.n1          = comb[1]
+        auxComb.n2          = comb[2]
+        auxComb.n3          = comb[3]
+        auxComb.n4          = comb[4]
+        auxComb.n5          = comb[5]
+        auxComb.n6          = comb[6]
+        auxComb.comp        = comb[7]
+        auxComb.re          = comb[8]
+
+        primiCombs.append(auxComb)
+    # return [PrimiComb(*cmb) for cmb in combinations]
+    return primiCombs
 
 
 def make_primilunes_dbclass():
@@ -89,12 +120,12 @@ def make_primisabado_dbclass():
     return [PrimiComb(*cmb) for cmb in combinations]
 
 
-@dataclass()
+@dataclass
 class PrimiDB:
     combs: List[PrimiComb] = field(default_factory=make_primitiva_dbclass)  # todas las combinaciones
-    combsmon: List[PrimiComb] = field(default_factory=make_primilunes_dbclass)  # combinaciones de los lunes
-    combsthr: List[PrimiComb] = field(default_factory=make_primijueves_dbclass)  # combinaciones de los jueves
-    combssat: List[PrimiComb] = field(default_factory=make_primisabado_dbclass)  # combinaciones de los sábados
+    # combsmon: List[PrimiComb] = field(default_factory=make_primilunes_dbclass)  # combinaciones de los lunes
+    # combsthr: List[PrimiComb] = field(default_factory=make_primijueves_dbclass)  # combinaciones de los jueves
+    # combssat: List[PrimiComb] = field(default_factory=make_primisabado_dbclass)  # combinaciones de los sábados
 
     def contador(self, combgrp: Union[None, int] = None) -> dict:
         """
@@ -280,15 +311,16 @@ class PrimiDB:
         return combsel
 
 
-@dataclass()
+@dataclass
 class EuroComb:
-    n1: int
-    n2: int
-    n3: int
-    n4: int
-    n5: int
-    e1: int
-    e2: int
+    combDate    : None  = field(init=False)
+    n1          : int   = field(init=False)
+    n2          : int   = field(init=False)
+    n3          : int   = field(init=False)
+    n4          : int   = field(init=False)
+    n5          : int   = field(init=False)
+    e1          : int   = field(init=False)
+    e2          : int   = field(init=False)
 
 
 def make_euromillones_dbclass():
@@ -296,14 +328,29 @@ def make_euromillones_dbclass():
     :returns objeto EuroDB todas las combinaciones de Euromillones
     """
 
-    db_fields = ', '.join(cte.EUROFIELDS[2:])
+    db_fields = ', '.join(cte.EUROFIELDS[1:])
     sqlstmt = f'SELECT {db_fields} FROM {cte.EUROMILLONES}'
 
     con = sql_connection(cte.DBDIR + cte.DBFILE)
     cursor = con.cursor()
     cursor.execute(sqlstmt)
     combinations = list(cursor.fetchall())
-    return [EuroComb(*cmb) for cmb in combinations]
+    euroCombs = []
+    strfmt  = "%Y-%m-%d"
+    for comb in combinations:
+        auxComb = EuroComb()
+        auxComb.combDate    = datetime.datetime.strptime(comb[0], strfmt)
+        auxComb.n1          = comb[1]
+        auxComb.n2          = comb[2]
+        auxComb.n3          = comb[3]
+        auxComb.n4          = comb[4]
+        auxComb.n5          = comb[5]
+        auxComb.e1          = comb[6]
+        auxComb.e2          = comb[7]
+        euroCombs.append(auxComb)
+    # return [PrimiComb(*cmb) for cmb in combinations]
+    return euroCombs
+    # return [EuroComb(*cmb) for cmb in combinations]
 
 
 def make_euromartes_dbclass():
@@ -336,11 +383,11 @@ def make_euroviernes_dbclass():
     return [EuroComb(*cmb) for cmb in combinations]
 
 
-@dataclass()
+@dataclass
 class EuroDB:
     combs: List[EuroComb] = field(default_factory=make_euromillones_dbclass)
-    combstue: List[EuroComb] = field(default_factory=make_euromartes_dbclass)
-    combsfri: List[EuroComb] = field(default_factory=make_euroviernes_dbclass)
+    # combstue: List[EuroComb] = field(default_factory=make_euromartes_dbclass)
+    # combsfri: List[EuroComb] = field(default_factory=make_euroviernes_dbclass)
 
     def contador(self, combgrp: Union[None, int] = None) -> dict:
         """
