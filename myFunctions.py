@@ -7,7 +7,7 @@ from clases import PrimiComb, EuroComb
 from typing import Union, Dict, List
 
 
-def getEstacion(fecha) -> int:
+def getSeason(fecha) -> int:
     """
     Devuelve la estación del año a la que pertenece 'fecha'
 
@@ -83,6 +83,7 @@ def seleccionaCombinaciones(estadisticas:Dict, numerosExcluidos:Union[List,None]
                         setattr(comb, numId, candidato)
             added = False
 
+        comb.ordena()
         combinaciones.append(comb)
     return combinaciones
 
@@ -106,3 +107,50 @@ def printCombinaciones(titulo:str, combinaciones:List) -> int:
             print(f"{comb.n1:<2} {comb.n2:<2} {comb.n3:<2} {comb.n4:<2} {comb.n5:<2}\te1-{comb.e1:<2} e2-{comb.e2}")
     print("___________________")
     return 0
+
+
+def combinacionExistente(comb: Union[PrimiComb, EuroComb], listaComb: List[Union[PrimiComb, EuroComb]],
+                         conFecha: bool = True) -> bool:
+    """
+    si la combinación 'comb' está en la lista de combinaciones devuelve true. si no, devuelve false
+    :param comb: combinación a verificar si está en la lista de combinaciones
+    :param listaComb: lista de combinaciones en la que se comprueba la existencia de 'comb'
+    :param conFecha: indica si se tiene en cuenta la fecha o no.
+    La fecha se tiene en cuenta a la hora de comprobar si hay que añadir una combinación a la lista de
+    combinaciones seleccionadas y no se tiene en cuenta al comprobar si una determinada combinación ha sido premiada
+    :return: True si 'comb' está en 'listaComb'. False si no está o los elementos de 'listaComb' son de un tipo
+    diferente a 'comb'
+    """
+    comb_en_listaComb = False
+
+    # compruebo si hay algo que comparar
+    nothing_to_search = True if comb is None or listaComb == [] or listaComb is None else False
+    if nothing_to_search:
+        return comb_en_listaComb
+
+    types_match = all([type(comb) == type(c) for c in listaComb])
+    if not types_match:
+        return comb_en_listaComb
+
+    if conFecha:    # hay que comprobar también la fecha
+        comb_en_listaComb = any(comb.__eq__(c) for c in listaComb)
+    else:
+        comb_en_listaComb = any(comb.compara_sin_fecha(c) for c in listaComb)
+
+    return comb_en_listaComb
+
+
+def check_to_add(comb_sel: List[Union[PrimiComb, EuroComb]], comb_list: List) -> List:
+    """
+    Comprueba si las combinaciones de comb_sel ya existen en comb_list y si no existen, las añade.
+    IMPORTANTE: antes de llamar a esta función hay que asignarle fecha a la combinación
+    :param comb_sel: lista de combinaciones a comprobar si se añaden o no al histórico
+    :param comb_list: lista de combinaciones histórica
+    :return: lista de combinaciones histórica actualizada
+    """
+    for comb in comb_sel:
+            if not any([comb.compara_sin_fecha(allcomb) for allcomb in comb_list]):
+                comb_list.append(comb)
+            else:
+                print(f"{__name__}. La combinación {comb} ya se había guardado anteriormente")
+    return comb_list

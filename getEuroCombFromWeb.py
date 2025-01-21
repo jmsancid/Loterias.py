@@ -1,10 +1,17 @@
 import requests
 from bs4 import BeautifulSoup
-from loterias_tools.loteriasdb import lotoparams
+# from loterias_tools.loteriasdb import lotoparams
+import constants as cte
 import datetime
 
 
-def procesa_fecha(fecha):
+def procesaFecha(fecha: str):
+    """
+    procesa la fecha de un determinado sorteo, extraída como string de la web de euromillones
+    y la convierte en un objeto Datetime
+    :param fecha:
+    :return:
+    """
     meses = {'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04', 'mayo': '05', 'junio': '06',
              'julio': '07', 'agosto': '08', 'septiembre': '09', 'octubre': 10, 'noviembre': 11, 'diciembre': 12}
 
@@ -22,13 +29,14 @@ def procesa_fecha(fecha):
     return fecha
 
 
-def get_euro_latest_results():
+def getEuroLatestResults():
     '''
     Devuelve un diccionario con los últimos resultados de euromillones, siendo la clave una cadena
     con la fecha y el valor una lista con los números extraídos
     :return: diccionario {fecha: [num1, num2, num3, num4, num5, estrella1, estrella2]}
     '''
-    response = requests.get(lotoparams.EUROWEB)
+    response = requests.get(cte.EUROWEB)
+    # response = requests.get(lotoparams.EUROWEB)
     # soup = BeautifulSoup(response.text, 'lxml')
     soup = BeautifulSoup(response.text, 'html.parser')
     # print(soup.title.text)
@@ -36,7 +44,7 @@ def get_euro_latest_results():
     numestre = soup.find_all('div', attrs={'class': 'numestre'})
     print('**************   COMBINACIONES EUROMILLONES       ****************')
     i = 0
-    combinaciones_extraidas = {}
+    combinacionesExtraidas = {}
     for elemento in numestre:
         # print(elemento.text)
         fechas = elemento.find_all('h4')
@@ -45,7 +53,7 @@ def get_euro_latest_results():
         # print('Fecha: ', fechas[0].text)
         i += 1
         # print('\t\t  ===========  Elemento nº', i)
-        fecha = procesa_fecha(fechas[0].text)
+        fecha = procesaFecha(fechas[0].text)
         combi = elemento.find_all('div', {'class': 'numhisto'})
         for elem in combi:
             # print(dir(elem), elem.contents)
@@ -60,7 +68,7 @@ def get_euro_latest_results():
                 # print(estrella.text)
                 comb_est.append(int(estrella.text))
             combinacion = comb_num + comb_est
-            combinaciones_extraidas[fecha] = combinacion
-            # print(fecha, combinaciones_extraidas[fecha])
+            combinacionesExtraidas[fecha] = combinacion
+            # print(fecha, combinacionesExtraidas[fecha])
 
-    return combinaciones_extraidas
+    return combinacionesExtraidas

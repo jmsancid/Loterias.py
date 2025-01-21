@@ -2,54 +2,63 @@
 # -*- coding: cp1252 -*-
 
 import requests
-from bs4 import BeautifulSoup
-from loterias_tools.loteriasdb import lotoparams
+import constants as cte
 import re
+import time
+
+from datetime import datetime, timedelta
 
 
-def procesa_fecha(fecha):
-    meses = {'ene': '01', 'feb': '02', 'mar': '03', 'abr': '04', 'may': '05', 'jun': '06',
-             'jul': '07', 'ago': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dic': '12'}
-
-    fecha = fecha.text.strip().split(' ')
-    # print('procesa fecha', fecha)
-    dia = re.sub("[^0-9]", "", fecha[0])
-    dia = dia if int(dia) > 9 else '0' + dia
-    mes = meses[fecha[1].strip('.')]
-    anno = fecha[2]
-    fecha_corta = anno + '-' + mes + '-' + dia
-    return fecha_corta
-
-
-def get_primi_latest_results():
+def getPrimiLatestResults():
     '''
-    Devuelve un diccionario con los últimos resultados de primitiva, siendo la clave una cadena
-    con la fecha y el valor una lista con los números extraídos
-    :return: diccionario {fecha: [num1, num2, num3, num4, num5, estrella1, estrella2]}
+    Devuelve un diccionario con los resultados de primitiva del último mes, siendo la clave una cadena
+    con la fecha y el valor una lista con los números extraídos.
+    La fecha final corresponde al lunes de la semana siguiente a la actual y la fecha inicial a la del lunes de
+    5 semanas atrás
+    :return: diccionario {fecha: [num1, num2, num3, num4, num5, num6, comp, re]}
+            1 si ha habido algún error
     '''
-    response = requests.get(lotoparams.PRIMIWEB)
-    # soup = BeautifulSoup(response.text, 'lxml')
-    soup = BeautifulSoup(response.text, 'html.parser')
-    # print(soup)
+    headers = {"User-Agent": "Mozilla/5.0",
+               "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+               "Accept-Encoding": "gzip, deflate, br",
+               "Connection": "keep-alive",
+               }
+    # Simula un retraso para evitar parecer un bot
+    time.sleep(2)
+
+    # En 2025 he tenido que cambiar la forma de extraer los números de la primitiva, utilizando una script que
+    # encontré mientras inspeccionaba la web de primitivas y que se llama buscadorSorteos
+    next_monday = datetime.now() + timedelta(days=8-datetime.now().isoweekday())
+    four_mondays_ago = next_monday + timedelta(weeks=-4)
+
+    url_Resultados_Primitiva = (f"https://www.loteriasyapuestas.es/servicios/buscadorSorteos?"
+                               f"game_id=LAPR&celebrados=true&fechaInicioInclusiva="
+                                f"{four_mondays_ago.year}{four_mondays_ago.month:02d}{four_mondays_ago.day:02d}&"
+                                f"fechaFinInclusiva={next_monday.year}{next_monday.month:02d}{next_monday.day:02d}")
+    response = requests.get(url_Resultados_Primitiva, headers=headers)
+    response.raise_for_status()  # Lanza una excepción si hay un error HTTP
+    # Verificar el estado de la respuesta
+    if response.status_code != 200:
+        print(f"Error accediendo a la web {cte.PRIMIWEB}\n Código de Error: {response.status_code}")
+        return 1
     print('++++++++++++++   COMBINACIONES PRIMITIVA +++++++++++++++++')
     #
-    sorteos = soup.find_all('td')
-    fechas = [sorteo.find_all('a', attrs={'class': 'smallerHeading'}) for sorteo in sorteos
-              if sorteo.find_all('a', attrs={'class': 'smallerHeading'})]
-    fechas = [procesa_fecha(fecha[0]) for fecha in fechas]
-    bolas = [sorteo.find_all('li', attrs={'class': 'ball'}) for sorteo in sorteos
-             if sorteo.find_all('li', attrs={'class': 'ball'})]
-    bolas = [[int(bola[i].text) for i in range(len(bola))] for bola in bolas]
-    complementarios = [sorteo.find_all('li', attrs={'class': 'bonus-ball bonus'}) for sorteo in sorteos
-                       if sorteo.find_all('li', attrs={'class': 'bonus-ball bonus'})]
-    complementarios = [int(complementario[0].text) for complementario in complementarios]
-    reintegros = [sorteo.find_all('li', attrs={'class': 'reintegro bonus'}) for sorteo in sorteos
-                  if sorteo.find_all('li', attrs={'class': 'reintegro bonus'})]
-    reintegros = [int(reintegro[0].text) for reintegro in reintegros]
-
-    combinaciones_extraidas = {fechas[i]: bolas[i] + [complementarios[i]] + [reintegros[i]]
-                               for i in range(len(fechas))}
-
+    sorteos = response.json()  # En 2025, la web de primitivas devuelve un json con los resultados.
+    combinaciones_extraidas = {}
+    for sorteo in sorteos:
+        fecha = sorteo.get("fecha_sorteo")
+        if fecha is None:
+          continue
+        str_comb = sorteo.get("combinacion")
+        combinaciones_extraidas[fecha[0:10]] = list(map(int, re.findall(r'\d+', str_comb)))
     return combinaciones_extraidas
 
-# print(get_primi_latest_results())
+
+# # print(get_primi_latest_results())
+#
+# # Ejemplo de uso
+# if __name__ == "__main__":
+#     # # Fecha de ejemplo: 5 de enero de 2025
+#     # fecha_ejemplo = datetime(2025, 1, 5)
+#     resultados = getPrimiLatestResults()
+#     print(resultados)

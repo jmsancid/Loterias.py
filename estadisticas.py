@@ -1,7 +1,7 @@
 #!usr/bin/env
 # -*- coding: cp1252 -*-
 
-from myFunctions import getEstacion
+from myFunctions import getSeason
 import copy
 from dataclasses import dataclass, fields
 import sys
@@ -13,7 +13,7 @@ from functools import wraps
 from bisect import bisect_left
 import constants as cte
 from clases import PrimiDB, EuroDB, PrimiComb, EuroComb
-from db_mgnt import sql_connection, sql_getcolumnname, Error
+from dbMgnt import sqlConnection, sqlGetColumnName, Error
 from typing import List, Union, Dict
 
 
@@ -173,16 +173,16 @@ def analiza(combinaciones: Union[List[PrimiComb], List[EuroComb]], criterio:int=
         match criterio:
             case 1: # frecuencia de números en primavera
                 contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
-                                if getEstacion(combinacion.combDate) == cte.PRIMAVERA]
+                                if getSeason(combinacion.combDate) == cte.PRIMAVERA]
             case 2: # frecuencia de números en verano
                 contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
-                                if getEstacion(combinacion.combDate) == cte.VERANO]
+                                if getSeason(combinacion.combDate) == cte.VERANO]
             case 3: # frecuencia de números en otoño
                 contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
-                                if getEstacion(combinacion.combDate)==cte.OTONO]
+                                if getSeason(combinacion.combDate) == cte.OTONO]
             case 4: # frecuencia de números en invierno
                 contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
-                                if getEstacion(combinacion.combDate) == cte.INVIERNO]
+                                if getSeason(combinacion.combDate) == cte.INVIERNO]
             case 5: # frecuencia de números en función del número de semana anual
                 contajeCampo = [getattr(combinacion, campo) for combinacion in combinaciones
                                 if combinacion.combDate.isocalendar().week == currentWeekNumber]
@@ -422,7 +422,7 @@ def buscapremios():
     encontradosprimi = 0
     encontradoseuro = 0
     try:
-        con = sql_connection(cte.DBDIR + cte.DBFILE)
+        con = sqlConnection(cte.DBDIR + cte.DBFILE)
         cursor = con.cursor()
         for misapuestas in tablasjugadas:
             # En la primitiva se verifican los 6 números de la combinación y en euromillones, por un lado los
@@ -430,10 +430,10 @@ def buscapremios():
             qnumverif = 6 if tablasjugadas.index(misapuestas) in [0, 1] else 5
             sorteo = cte.PRIMITIVA if qnumverif == 6 else cte.EUROMILLONES
 
-            camposjugados = sql_getcolumnname(con, misapuestas)
+            camposjugados = sqlGetColumnName(con, misapuestas)
             del(camposjugados[1])  # No consideramos el campo idcomb de las tablas de combinaciones seleccionadas
             sqlcamposjugados = ', '.join(camposjugados)
-            camposextraidos = sql_getcolumnname(con, sorteo)
+            camposextraidos = sqlGetColumnName(con, sorteo)
             # del(camposextraidos[0])  # No consideramos el campo idx de las tablas de combinaciones extraidas
             # en los sorteos
             camposextraidos.remove('idx')  # No consideramos el campo idx de las tablas de combinaciones extraidas
